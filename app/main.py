@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -119,7 +119,19 @@ class RestoreOriginalPath:
             path = scope.get("path", "")
             if path.startswith(_ENTRY_PREFIXES):
                 restored = None
+                # The host's rewrite can carry the real path in a query parameter.
+                query = scope.get("query_string", b"").decode("latin-1")
+                params = parse_qsl(query, keep_blank_values=True)
+                for key, value in params:
+                    if key == "__vpath" and value:
+                        restored = value if value.startswith("/") else "/" + value
+                        scope = dict(scope)
+                        scope["query_string"] = urlencode(
+                            [(k, v) for k, v in params if k != "__vpath"]).encode("latin-1")
+                        break
                 for key, value in scope.get("headers", []):
+                    if restored:
+                        break
                     if key.lower() in _ORIGINAL_PATH_HEADERS:
                         candidate = urlsplit(value.decode("latin-1")).path
                         if candidate.startswith("/") and not candidate.startswith(_ENTRY_PREFIXES):
