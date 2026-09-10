@@ -300,9 +300,16 @@ SETUP_PAGE = """<!doctype html><meta charset="utf-8">
 @app.exception_handler(404)
 async def not_found(request, exc):  # noqa: ARG001
     """Report the path we actually received, so routing problems are diagnosable."""
+    scope = request.scope
     return JSONResponse(
-        {"detail": "Not Found", "path_received": request.url.path,
-         "hint": "If this path looks wrong, the host is rewriting the URL."},
+        {"detail": "Not Found",
+         "path_received": request.url.path,
+         "raw_query": scope.get("query_string", b"").decode("latin-1")[:200],
+         "routing_headers": {
+             k.decode("latin-1"): v.decode("latin-1")[:120]
+             for k, v in scope.get("headers", [])
+             if k.lower().startswith((b"x-vercel", b"x-forwarded", b"x-original", b"x-matched"))},
+         "hint": "If path_received looks wrong, the host rewrote the URL."},
         status_code=404)
 
 

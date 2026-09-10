@@ -15,3 +15,6 @@ template.pptx
 *.pptx
 *.pdf
 _patch_*.py
+
+# local only - contains real secrets
+vercel-env.txt
