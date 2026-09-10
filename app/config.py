@@ -23,7 +23,12 @@ PORT = int(os.getenv("PORT", "8000"))
 _DEFAULT_UPLOADS = "/tmp/uploads" if os.getenv("VERCEL") else str(BASE_DIR / "uploads")
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _DEFAULT_UPLOADS))
 STATIC_DIR = BASE_DIR / "static"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Read-only filesystem (some serverless platforms). Fall back to /tmp.
+    UPLOAD_DIR = Path("/tmp/uploads")
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------- domain model
 

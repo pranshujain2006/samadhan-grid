@@ -22,10 +22,17 @@ def new_id(prefix: str) -> str:
 
 
 async def connect() -> AsyncIOMotorDatabase:
+    """Connect and verify. Fails fast with a readable message rather than hanging."""
     global _client, _db
     if _db is None:
-        _client = AsyncIOMotorClient(MONGODB_URI, uuidRepresentation="standard")
+        _client = AsyncIOMotorClient(
+            MONGODB_URI,
+            uuidRepresentation="standard",
+            serverSelectionTimeoutMS=8000,   # do not hang a serverless request
+            connectTimeoutMS=8000,
+        )
         _db = _client[MONGODB_DB]
+        await _db.command("ping")            # prove the connection really works
         await _ensure_indexes(_db)
     return _db
 
