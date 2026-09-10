@@ -1,3 +1,14 @@
+---
+title: SAMADHAN GRID
+emoji: 💧
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: Jharkhand Problem-to-Impact Innovation Operating System
+---
+
 # SAMADHAN GRID
 
 **Jharkhand Problem-to-Impact Innovation Operating System** — a working prototype.
