@@ -305,10 +305,12 @@ async def not_found(request, exc):  # noqa: ARG001
         {"detail": "Not Found",
          "path_received": request.url.path,
          "raw_query": scope.get("query_string", b"").decode("latin-1")[:200],
-         "routing_headers": {
-             k.decode("latin-1"): v.decode("latin-1")[:120]
+         "all_header_names": sorted(k.decode("latin-1") for k, _ in scope.get("headers", [])),
+         "path_like_headers": {
+             k.decode("latin-1"): v.decode("latin-1")[:160]
              for k, v in scope.get("headers", [])
-             if k.lower().startswith((b"x-vercel", b"x-forwarded", b"x-original", b"x-matched"))},
+             if b"/" in v and len(v) < 300 and not k.lower().startswith(
+                 (b"x-vercel-oidc", b"x-vercel-proxy-sig", b"user-agent", b"accept"))},
          "hint": "If path_received looks wrong, the host rewrote the URL."},
         status_code=404)
 
