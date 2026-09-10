@@ -19,7 +19,9 @@ MONGODB_DB = os.getenv("MONGODB_DB", "samadhan_grid")
 HOST = os.getenv("HOST", "127.0.0.1")   # containers must use 0.0.0.0
 PORT = int(os.getenv("PORT", "8000"))
 
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads")))
+# Serverless platforms give you exactly one writable directory: /tmp.
+_DEFAULT_UPLOADS = "/tmp/uploads" if os.getenv("VERCEL") else str(BASE_DIR / "uploads")
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _DEFAULT_UPLOADS))
 STATIC_DIR = BASE_DIR / "static"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
