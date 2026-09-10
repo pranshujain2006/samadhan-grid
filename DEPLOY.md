@@ -101,18 +101,3 @@ For a real deployment, store evidence in object storage instead. Two good free o
 - **Cloudinary** free tier — better if the evidence is mostly photos and video.
 
 ---
-
-## Quick comparison
-
-| Platform | Free forever | Card needed | Handles 265 MB | Sleeps | Verdict |
-|---|---|---|---|---|---|
-| **HF Spaces (Docker)** | Yes | No | Yes | after ~48 h | **Best for this project** |
-| Render free | Yes | No | Yes | after 15 min (~50 s wake) | Good, but the cold start hurts a live demo |
-| Oracle Always Free | Yes | Yes | Yes | Never | Best performance, most setup |
-| Koyeb free | Yes | No | Yes | No | Reasonable alternative |
-| Fly.io | Limited allowance | Yes | Yes | Configurable | Fine, but no longer clearly free |
-| Railway | Trial credit only | Yes | Yes | No | Not free any more |
-| **Vercel / Netlify** | Yes | No | **No — 250 MB cap** | n/a | **Cannot host this project** |
-| PythonAnywhere free | Yes | No | Tight | No | Awkward for ASGI/FastAPI |
-
-Free tiers change often — check the current limits before you commit to one.
