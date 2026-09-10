@@ -7,6 +7,7 @@
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/", "destination": "/api/index?__vpath=/" },
+    { "source": "/(.*)", "destination": "/api/index?__vpath=/$1" }
   ]
 }

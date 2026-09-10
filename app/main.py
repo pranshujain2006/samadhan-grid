@@ -11,7 +11,7 @@ from typing import Any
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import seed as seed_mod
@@ -238,6 +238,15 @@ SETUP_PAGE = """<!doctype html><meta charset="utf-8">
  Full status at <a href="/api/health">/api/health</a>. This page disappears once the
  database connects.</p>
 </div>"""
+
+
+@app.exception_handler(404)
+async def not_found(request, exc):  # noqa: ARG001
+    """Report the path we actually received, so routing problems are diagnosable."""
+    return JSONResponse(
+        {"detail": "Not Found", "path_received": request.url.path,
+         "hint": "If this path looks wrong, the host is rewriting the URL."},
+        status_code=404)
 
 
 @app.get("/", include_in_schema=False)
