@@ -13,20 +13,63 @@ Two different jobs:
 from __future__ import annotations
 
 import math
+import re
+import zlib
 from datetime import datetime, timezone
 from typing import Any
 
 import numpy as np
-from scipy.sparse import hstack
-from sklearn.feature_extraction.text import HashingVectorizer
 
 from . import groq_client
 
-# Stateless vectorisers: no fitting, so embeddings stay stable as data grows.
-_WORD = HashingVectorizer(n_features=2 ** 18, alternate_sign=False, norm=None,
-                          ngram_range=(1, 2), lowercase=True, stop_words="english")
-_CHAR = HashingVectorizer(n_features=2 ** 18, alternate_sign=False, norm=None,
-                          analyzer="char_wb", ngram_range=(3, 5), lowercase=True)
+# ---------------------------------------------------------------- vectoriser
+# A hashing vectoriser in ~30 lines of numpy, replacing scikit-learn + scipy.
+# Stateless by design: nothing is "fitted", so a vector computed today still
+# matches one computed after a thousand more reports arrive.
+#
+# Word n-grams catch shared vocabulary. Character n-grams catch spelling
+# variants, inflections and transliteration ("handpump" / "hand pump" /
+# "chapakal"). Devanagari and other Indian scripts are matched by the same
+# unicode-aware word rule.
+
+DIM = 4096                      # 16 KB per document as float32
+
+_WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
+
+# Only the most common English function words: anything more aggressive starts
+# throwing away signal in Hinglish text.
+_STOP = {
+    "a", "an", "the", "and", "or", "but", "if", "of", "at", "by", "for", "with",
+    "to", "from", "in", "on", "is", "are", "was", "were", "be", "been", "it",
+    "its", "this", "that", "these", "those", "as", "we", "our", "they", "their",
+    "there", "has", "have", "had", "not", "no", "do", "does", "did", "so",
+}
+
+
+def _words(text: str) -> list[str]:
+    return [w for w in _WORD_RE.findall(text.lower()) if w not in _STOP]
+
+
+def _word_grams(text: str) -> list[str]:
+    ws = _words(text)
+    return ws + [f"{ws[i]} {ws[i + 1]}" for i in range(len(ws) - 1)]
+
+
+def _char_grams(text: str, lo: int = 3, hi: int = 5) -> list[str]:
+    """Character n-grams inside word boundaries, like sklearn's char_wb."""
+    out: list[str] = []
+    for w in _WORD_RE.findall(text.lower()):
+        padded = f" {w} "
+        for n in range(lo, hi + 1):
+            if len(padded) >= n:
+                out.extend(padded[i:i + n] for i in range(len(padded) - n + 1))
+    return out
+
+
+def _accumulate(row: np.ndarray, tokens: list[str], weight: float) -> None:
+    # crc32 is deterministic across processes and runs, unlike Python's hash().
+    for tok in tokens:
+        row[zlib.crc32(tok.encode("utf-8")) % DIM] += weight
 
 # Domains that commonly share a root cause with each other.
 _ROOT_CAUSE_FAMILIES = [
@@ -51,24 +94,24 @@ def text_of(dna: dict[str, Any]) -> str:
     return " ".join(p for p in parts if p).strip()
 
 
-def embed(texts: list[str]) -> Any:
-    """L2-normalised sparse embedding matrix for a list of texts."""
+def embed(texts: list[str]) -> np.ndarray | None:
+    """L2-normalised dense embedding matrix for a list of texts."""
     if not texts:
         return None
-    w = _WORD.transform(texts)
-    c = _CHAR.transform(texts)
-    m = hstack([w * 1.0, c * 0.6]).tocsr()
-    norms = np.sqrt(m.multiply(m).sum(axis=1)).A.ravel()
+    m = np.zeros((len(texts), DIM), dtype=np.float32)
+    for i, text in enumerate(texts):
+        _accumulate(m[i], _word_grams(text), 1.0)
+        _accumulate(m[i], _char_grams(text), 0.6)
+    norms = np.linalg.norm(m, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
-    inv = 1.0 / norms
-    return m.multiply(inv[:, None]).tocsr()
+    return m / norms
 
 
 def cosine(a_text: str, b_texts: list[str]) -> list[float]:
     if not b_texts:
         return []
     mat = embed([a_text] + b_texts)
-    sims = (mat[1:] @ mat[0].T).toarray().ravel()
+    sims = mat[1:] @ mat[0]
     return [float(max(0.0, min(1.0, s))) for s in sims]
 
 
@@ -206,7 +249,7 @@ def cluster(challenges: list[dict[str, Any]], threshold: float = 0.34
         return []
     texts = [text_of(c.get("dna", {})) for c in challenges]
     mat = embed(texts)
-    sim = (mat @ mat.T).toarray()
+    sim = mat @ mat.T
 
     parent = list(range(n))
 
