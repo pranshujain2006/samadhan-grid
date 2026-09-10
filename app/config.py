@@ -9,19 +9,37 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
-GROQ_STT_MODEL = os.getenv("GROQ_STT_MODEL", "whisper-large-v3").strip()
+def env(name: str, default: str = "") -> str:
+    """Read an environment variable.
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-MONGODB_DB = os.getenv("MONGODB_DB", "samadhan_grid")
+    os.getenv only falls back to the default when the variable is MISSING. Hosting
+    platforms often set variables to an empty string instead, which is why
+    int(os.getenv("PORT", "8000")) can raise ValueError on a real deployment.
+    """
+    value = os.getenv(name)
+    return value.strip() if value and value.strip() else default
 
-HOST = os.getenv("HOST", "127.0.0.1")   # containers must use 0.0.0.0
-PORT = int(os.getenv("PORT", "8000"))
+
+def env_int(name: str, default: int) -> int:
+    try:
+        return int(env(name, str(default)))
+    except ValueError:
+        return default
+
+
+GROQ_API_KEY = env("GROQ_API_KEY")
+GROQ_MODEL = env("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_STT_MODEL = env("GROQ_STT_MODEL", "whisper-large-v3")
+
+MONGODB_URI = env("MONGODB_URI", "mongodb://localhost:27017")
+MONGODB_DB = env("MONGODB_DB", "samadhan_grid")
+
+HOST = env("HOST", "127.0.0.1")         # containers must use 0.0.0.0
+PORT = env_int("PORT", 8000)
 
 # Serverless platforms give you exactly one writable directory: /tmp.
-_DEFAULT_UPLOADS = "/tmp/uploads" if os.getenv("VERCEL") else str(BASE_DIR / "uploads")
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _DEFAULT_UPLOADS))
+_DEFAULT_UPLOADS = "/tmp/uploads" if env("VERCEL") else str(BASE_DIR / "uploads")
+UPLOAD_DIR = Path(env("UPLOAD_DIR", _DEFAULT_UPLOADS))
 STATIC_DIR = BASE_DIR / "static"
 try:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
