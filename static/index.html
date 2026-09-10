@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAMADHAN GRID — your problem, heard, solved and proved</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128167;</text></svg>">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">
+        <div class="mark">SG</div>
+        <h1>SAMADHAN GRID</h1>
+      </div>
+      <div class="sub">Jharkhand · from a villager's<br>voice to a proven fix</div>
+    </div>
+    <nav class="nav" id="nav">
+      <a data-v="home"><span class="n">⌂</span> Home</a>
+      <a data-v="story"><span class="n">&#9654;</span> See one full story</a>
+      <div class="lbl">THE 6 STEPS</div>
+      <a data-v="report"><span class="n">1</span> Report a problem</a>
+      <a data-v="review"><span class="n">2</span> Check reports</a>
+      <a data-v="connect"><span class="n">3</span> Connect the dots</a>
+      <a data-v="team"><span class="n">4</span> Find the team</a>
+      <a data-v="work"><span class="n">5</span> Do the work</a>
+      <a data-v="proof"><span class="n">6</span> See the proof</a>
+      <div class="lbl">YOUR VOICE</div>
+      <a data-v="say"><span class="n">&#9733;</span> Rate this service</a>
+      <div class="lbl">LIBRARY</div>
+      <a data-v="lessons"><span class="n">★</span> Learn from the past</a>
+    </nav>
+    <div class="foot">
+      <div class="side-help">
+        <div class="sk">HELPLINE &middot; NO INTERNET NEEDED</div>
+        <a href="tel:+918959491068">8959 491 068</a>
+        <div class="ss">Call and we fill the form for you</div>
+      </div>
+      <div id="aiStatus" style="margin-top:12px">checking...</div>
+      <div style="margin-top:10px"><a id="btnDemo" style="color:#7fb4f0;cursor:pointer">Load demo</a></div>
+      <div style="margin-top:6px"><a href="/docs" target="_blank" style="color:#7fb4f0">Developer API</a></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div>
+        <h2 id="vTitle">Welcome</h2>
+        <div class="desc" id="vDesc"></div>
+      </div>
+      <div id="topActions" class="row"></div>
+    </div>
+    <div class="wrap" id="view"></div>
+
+    <footer class="site-foot">
+      <div class="fcall">
+        <div class="fic">&#9742;</div>
+        <div>
+          <div class="fk">NO INTERNET? NO SMARTPHONE? JUST CALL US</div>
+          <a class="fnum" href="tel:+918959491068">8959 491 068</a>
+          <div class="fsub">We will listen to your problem and fill the form for you.
+            Hindi and English. Your report gets the same reference number and the same
+            treatment as one sent from the website.</div>
+        </div>
+      </div>
+      <div class="fways">
+        <div class="fway"><b>Call the helpline</b><span>8959 491 068 &middot; speak in your own language</span></div>
+        <div class="fway"><b>Go to your CSC or Panchayat office</b><span>The operator files it for you, free of charge</span></div>
+        <div class="fway"><b>Use this website</b><span>Type it, or record a voice note</span></div>
+      </div>
+      <div class="fbase">
+        <span>SAMADHAN GRID &middot; Government of Jharkhand &middot; from a villager's voice to a proven fix</span>
+        <span>Helpline <a href="tel:+918959491068">8959 491 068</a></span>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

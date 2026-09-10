@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.git/
+.env
+uploads/*
+shots/
+preview/
+server.log
+*.pptx
+*.pdf
+template.pptx
+_patch_*.py

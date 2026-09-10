@@ -1,0 +1,17 @@
+# secrets - never commit
+.env
+
+# runtime
+__pycache__/
+*.pyc
+uploads/*
+!uploads/.gitkeep
+server.log
+
+# local working files
+shots/
+preview/
+template.pptx
+*.pptx
+*.pdf
+_patch_*.py
