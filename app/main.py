@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+from urllib.parse import urlsplit
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -96,6 +97,50 @@ app = FastAPI(
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
+
+# ---------------------------------------------------------------- path repair
+# Serverless platforms rewrite every URL to the function entry point, which means
+# the app can be handed "/api/index" for every request and answer 404 for the whole
+# site. This lives on the app itself (not in a wrapper around it) so it runs no
+# matter how the platform discovers the ASGI callable. It is inert locally.
+
+_ENTRY_PREFIXES = ("/api/index.py", "/api/index")
+_ORIGINAL_PATH_HEADERS = (b"x-vercel-original-path", b"x-forwarded-uri", b"x-original-uri")
+
+
+class RestoreOriginalPath:
+    """Undo the host's rewrite so routing sees the URL the visitor requested."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path.startswith(_ENTRY_PREFIXES):
+                restored = None
+                for key, value in scope.get("headers", []):
+                    if key.lower() in _ORIGINAL_PATH_HEADERS:
+                        candidate = urlsplit(value.decode("latin-1")).path
+                        if candidate.startswith("/") and not candidate.startswith(_ENTRY_PREFIXES):
+                            restored = candidate
+                            break
+                if restored is None:
+                    for prefix in _ENTRY_PREFIXES:
+                        if path.startswith(prefix):
+                            restored = path[len(prefix):] or "/"
+                            break
+                if restored:
+                    if not restored.startswith("/"):
+                        restored = "/" + restored
+                    scope = dict(scope)
+                    scope["path"] = restored
+                    scope["raw_path"] = restored.encode("utf-8")
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(RestoreOriginalPath)
+
 
 app.include_router(challenges.router)
 app.include_router(governance.router)
